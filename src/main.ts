@@ -3,7 +3,7 @@ import leaflet from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./style.css";
 import "./_leafletWorkaround.ts";
-import luck from "./_luck.ts";
+// import luck from "./_luck.ts";
 
 // Create page layout
 const controlPanelDiv = document.createElement("div");
