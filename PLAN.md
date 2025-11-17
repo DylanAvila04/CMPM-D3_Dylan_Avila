@@ -19,6 +19,8 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ### Steps
 
+### D3.a world of bits, Core mechanics
+
 ### Starting implementation - Finished 11/12/25
 
 - [x] copy main.ts to reference.ts for future reference
@@ -42,7 +44,7 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [x] only allow clicks on cells that are within this interaction radius
       - helpful to also add a distance helper.
 
-## Inventory and crafting - finishe
+## Inventory and crafting - finished 11/17/25
 
 - [x] add a heldTokenValue variable that can be either null or the value of the token in hand
 - [x] implement picking up a token from a cell when I’m not holding anything
@@ -53,10 +55,12 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [x] detect when I create a token of “high enough” value (e.g. 16) and show a special success message
 - [x} use the status panel to always display what token (if any) I’m holding
 
-## UI polish
+## UI polish - finished 11/17/25
 
 -[x] Change the font and background to my own design and unique
 
 - [x] use the status panel to show interaction messages like too far away, empty cell, mismatch, crafted new token, etc.
 - [x] clean up variable names and comments to avoid code smells and leftover debug logging
 - [x] test edge cases (clicking far cells, empty cells, many crafts in a row) to make sure state
+
+### D3.b world of bits, Globe spanning gameplay
