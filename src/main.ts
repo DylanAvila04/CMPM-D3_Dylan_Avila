@@ -13,13 +13,26 @@ const mapDiv = document.createElement("div");
 mapDiv.id = "map";
 document.body.append(mapDiv);
 
-function updateStatus(message: string) {
-  statusPanelDiv.innerHTML = message;
-}
-
 const statusPanelDiv = document.createElement("div");
 statusPanelDiv.id = "statusPanel";
 document.body.append(statusPanelDiv);
+
+let heldTokenValue: number | null = null;
+
+const TARGET_TOKEN_VALUE = 16;
+
+function updateStatus(message?: string) {
+  const heldText = heldTokenValue === null
+    ? "Not holding a token."
+    : `Holding a token of value ${heldTokenValue}.`;
+
+  let extra = "";
+  if (message) {
+    extra = "<br>" + message;
+  }
+
+  statusPanelDiv.innerHTML = heldText + extra;
+}
 
 // Classroom location
 const CLASSROOM_LATLNG = leaflet.latLng(
@@ -95,13 +108,44 @@ function handleCellClick(cell: Cell) {
     return;
   }
 
-  if (cell.value === 0) {
-    updateStatus(`Cell (${cell.i}, ${cell.j}) is nearby but has no token.`);
-  } else {
-    updateStatus(
-      `Cell (${cell.i}, ${cell.j}) is nearby and has a token worth ${cell.value}.`,
-    );
+  if (heldTokenValue == null) {
+    if (cell.value == 0) {
+      updateStatus("This cell has no token to pick up");
+      return;
+    }
+
+    heldTokenValue = cell.value;
+    cell.value = 0;
+    updateCellTooltip(cell);
+    updateStatus("You picked up a token!");
+    return;
   }
+
+  if (cell.value == 0) {
+    updateStatus(
+      "You can only craft a new token with a cell that alreaddy has a token",
+    );
+    return;
+  }
+
+  if (cell.value !== heldTokenValue) {
+    updateStatus(
+      "Too craft the token has to be equal value as the token you currently have: ${heldTokenValue}.",
+    );
+    return;
+  }
+
+  const newValue = cell.value * 2;
+  heldTokenValue = null;
+  cell.value = newValue;
+  updateCellTooltip(cell);
+
+  let message = `Crafted a token of value ${newValue}!`;
+  if (newValue >= TARGET_TOKEN_VALUE) {
+    message += " Goal reached: high-value token created!";
+  }
+
+  updateStatus(message);
 }
 
 function updateCellTooltip(cell: Cell) {
@@ -150,4 +194,4 @@ for (let i = -NEIGHBORHOOD_SIZE; i <= NEIGHBORHOOD_SIZE; i++) {
   }
 }
 
-updateStatus("Click near cells to see their info.");
+updateStatus("Click nearby cells to pick up and craft tokens.");

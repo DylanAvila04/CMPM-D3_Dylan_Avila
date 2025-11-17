@@ -42,16 +42,16 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [x] only allow clicks on cells that are within this interaction radius
       - helpful to also add a distance helper.
 
-## Inventory and crafting - finished
+## Inventory and crafting - finishe
 
-- [ ] add a heldTokenValue variable that can be either null or the value of the token in hand
-- [ ] implement picking up a token from a cell when I’m not holding anything
-- [ ] prevent picking up from empty cells and show a helpful status message
-- [ ] implement crafting: if I’m holding a token and click a cell with the same value,
+- [x] add a heldTokenValue variable that can be either null or the value of the token in hand
+- [x] implement picking up a token from a cell when I’m not holding anything
+- [x] prevent picking up from empty cells and show a helpful status message
+- [x] implement crafting: if I’m holding a token and click a cell with the same value,
       remove both and leave a new token with double the value in that cell
-- [ ] block crafting if the values don’t match and update the status with a message
-- [ ] detect when I create a token of “high enough” value (e.g. 16) and show a special success message
-- [ ] use the status panel to always display what token (if any) I’m holding
+- [x] block crafting if the values don’t match and update the status with a message
+- [x] detect when I create a token of “high enough” value (e.g. 16) and show a special success message
+- [x} use the status panel to always display what token (if any) I’m holding
 
 ## UI polish
 
