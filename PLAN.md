@@ -1,16 +1,16 @@
 # D3: The world of the Token Crafter
 
-# Game Design Vision
+## Game Design Vision
 
 Game about the world being divided into grid cells drawn on a leaflet map and some cells contain tokens with different values. The player can only interact with nearby cells, they can pick up one single cell at a time and then try to craft by combining it with a cell of equal value to make a token worth double now. The goal is similar to the games 4096 and pokemon go where we essentially make a token of high value but also have to walk around to get these tokens and combine them.
 
-# Technologies
+## Technologies
 
 - TypeScript for most game code, little to no explicit HTML, and all CSS collected in common `style.css` file
 - Deno and Vite for building
 - GitHub Actions + GitHub Pages for deployment automation
 
-# Assignments
+## Assignments
 
 ## D3.a: Core mechanics (token collection and crafting)
 
@@ -19,7 +19,7 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ### Steps
 
-### Starting implementation
+### Starting implementation - Finished 11/12/25
 
 - [x] copy main.ts to reference.ts for future reference
 - [x] delete everything in main.ts
@@ -29,19 +29,20 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [x] use loops to draw a whole grid of cells on the map
 -
 
-## Tokens
+## Tokens - Finished 11/16/25
 
 [x] use the luck function with (i,j) to decide whether each cell spawns a token
 [x] use luck again to choose the token’s value (e.g. 2, 4, 8) in a random way
 [x] store each cell’s data in a Cell type like coordinates, rectangle, current token value
 [x] show each cell’s current token value with a permanent label so players can see it without clicking
 
-## Player interaction
+## Player interaction - finished 11/17/25
 
-- [ ] define an interaction radius (about three cells away from the player)
-- [ ] only allow clicks on cells that are within this interaction radius
+- [x] define an interaction radius of about three cells away from the player
+- [x] only allow clicks on cells that are within this interaction radius
+      - helpful to also add a distance helper.
 
-## Inventory and crafting
+## Inventory and crafting - finished
 
 - [ ] add a heldTokenValue variable that can be either null or the value of the token in hand
 - [ ] implement picking up a token from a cell when I’m not holding anything
@@ -52,7 +53,7 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [ ] detect when I create a token of “high enough” value (e.g. 16) and show a special success message
 - [ ] use the status panel to always display what token (if any) I’m holding
 
-## UI / polish
+## UI polish
 
 - [ ] use the status panel to show interaction messages (too far away, empty cell, mismatch, crafted new token, etc.)
 - [ ] clean up variable names and comments to avoid code smells and leftover debug logging

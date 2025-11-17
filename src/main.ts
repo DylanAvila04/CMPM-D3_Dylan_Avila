@@ -5,7 +5,6 @@ import "./style.css";
 import "./_leafletWorkaround.ts";
 import luck from "./_luck.ts";
 
-// Create page layout
 const controlPanelDiv = document.createElement("div");
 controlPanelDiv.id = "controlPanel";
 document.body.append(controlPanelDiv);
@@ -13,6 +12,10 @@ document.body.append(controlPanelDiv);
 const mapDiv = document.createElement("div");
 mapDiv.id = "map";
 document.body.append(mapDiv);
+
+function updateStatus(message: string) {
+  statusPanelDiv.innerHTML = message;
+}
 
 const statusPanelDiv = document.createElement("div");
 statusPanelDiv.id = "statusPanel";
@@ -24,7 +27,6 @@ const CLASSROOM_LATLNG = leaflet.latLng(
   -122.05703507501151,
 );
 
-// Create the map
 const GAMEPLAY_ZOOM_LEVEL = 19;
 
 const map = leaflet.map(mapDiv, {
@@ -36,7 +38,6 @@ const map = leaflet.map(mapDiv, {
   scrollWheelZoom: false,
 });
 
-// Add the tile layer
 leaflet
   .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
@@ -51,8 +52,9 @@ playerMarker.addTo(map);
 
 const TILE_DEGREES = 1e-4;
 const NEIGHBORHOOD_SIZE = 8;
+const INTERACTION_RANGE = 3;
 
-const TOKEN_SPAWN_PROBABILITY = 0.25; // 25% chance a cell has a token
+const TOKEN_SPAWN_PROBABILITY = 0.25;
 const MAX_TOKEN_EXPONENT = 3;
 
 type Cell = {
@@ -81,6 +83,27 @@ function tileBounds(i: number, j: number): leaflet.LatLngBoundsExpression {
   ];
 }
 
+function tileDistanceFromPlayer(i: number, j: number): number {
+  return Math.max(Math.abs(i), Math.abs(j));
+}
+
+function handleCellClick(cell: Cell) {
+  const distance = tileDistanceFromPlayer(cell.i, cell.j);
+
+  if (distance > INTERACTION_RANGE) {
+    updateStatus("That cell is too far away to interact with.");
+    return;
+  }
+
+  if (cell.value === 0) {
+    updateStatus(`Cell (${cell.i}, ${cell.j}) is nearby but has no token.`);
+  } else {
+    updateStatus(
+      `Cell (${cell.i}, ${cell.j}) is nearby and has a token worth ${cell.value}.`,
+    );
+  }
+}
+
 function updateCellTooltip(cell: Cell) {
   const label = cell.value === 0 ? "" : cell.value.toString();
 
@@ -101,12 +124,10 @@ function createCell(i: number, j: number): Cell {
   const rect = leaflet.rectangle(tileBounds(i, j), { weight: 1 });
   rect.addTo(map);
 
-  // deterministic roll for whether this cell has a token
   const spawnRoll = luck([i, j, "spawn"].toString());
   let value = 0;
 
   if (spawnRoll < TOKEN_SPAWN_PROBABILITY) {
-    // choose exponent 1..MAX_TOKEN_EXPONENT → 2,4,8,...
     const exponent = 1 +
       Math.floor(luck([i, j, "value"].toString()) * MAX_TOKEN_EXPONENT);
     value = 2 ** exponent;
@@ -114,6 +135,10 @@ function createCell(i: number, j: number): Cell {
 
   const cell: Cell = { i, j, rect, value };
   updateCellTooltip(cell);
+
+  rect.on("click", () => {
+    handleCellClick(cell);
+  });
 
   cells.set(cellKey(i, j), cell);
   return cell;
@@ -124,3 +149,5 @@ for (let i = -NEIGHBORHOOD_SIZE; i <= NEIGHBORHOOD_SIZE; i++) {
     createCell(i, j);
   }
 }
+
+updateStatus("Click near cells to see their info.");
