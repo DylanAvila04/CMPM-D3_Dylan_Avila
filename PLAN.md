@@ -27,13 +27,33 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [x] draw the player's location on the map
 - [x] draw a rectangle representing one cell on the map
 - [x] use loops to draw a whole grid of cells on the map
-- .
+-
 
-### Map + grid
+## Tokens
 
-- [ ] put a basic Leaflet map on the screen centered on the classroom
-- [ ] lock the zoom level so the player can see out to the edges of the map
-- [ ] draw the player's location on the map
-- [ ] compute a fixed grid (using TILE_DEGREES) around the classroom
-- [ ] use nested loops to draw a rectangle representing one cell on the map
-- [ ] extend the loops to draw a whole grid of cells on the map
+[x] use the luck function with (i,j) to decide whether each cell spawns a token
+[x] use luck again to choose the token’s value (e.g. 2, 4, 8) in a random way
+[x] store each cell’s data in a Cell type like coordinates, rectangle, current token value
+[x] show each cell’s current token value with a permanent label so players can see it without clicking
+
+## Player interaction
+
+- [ ] define an interaction radius (about three cells away from the player)
+- [ ] only allow clicks on cells that are within this interaction radius
+
+## Inventory and crafting
+
+- [ ] add a heldTokenValue variable that can be either null or the value of the token in hand
+- [ ] implement picking up a token from a cell when I’m not holding anything
+- [ ] prevent picking up from empty cells and show a helpful status message
+- [ ] implement crafting: if I’m holding a token and click a cell with the same value,
+      remove both and leave a new token with double the value in that cell
+- [ ] block crafting if the values don’t match and update the status with a message
+- [ ] detect when I create a token of “high enough” value (e.g. 16) and show a special success message
+- [ ] use the status panel to always display what token (if any) I’m holding
+
+## UI / polish
+
+- [ ] use the status panel to show interaction messages (too far away, empty cell, mismatch, crafted new token, etc.)
+- [ ] clean up variable names and comments to avoid code smells and leftover debug logging
+- [ ] test edge cases (clicking far cells, empty cells, many crafts in a row) to make sure state
