@@ -55,6 +55,8 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ## UI polish
 
-- [ ] use the status panel to show interaction messages (too far away, empty cell, mismatch, crafted new token, etc.)
-- [ ] clean up variable names and comments to avoid code smells and leftover debug logging
-- [ ] test edge cases (clicking far cells, empty cells, many crafts in a row) to make sure state
+-[x] Change the font and background to my own design and unique
+
+- [x] use the status panel to show interaction messages like too far away, empty cell, mismatch, crafted new token, etc.
+- [x] clean up variable names and comments to avoid code smells and leftover debug logging
+- [x] test edge cases (clicking far cells, empty cells, many crafts in a row) to make sure state

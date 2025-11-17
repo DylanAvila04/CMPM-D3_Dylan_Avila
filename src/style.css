@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 #controlPanel {
   padding: 1rem;
 }
@@ -9,4 +10,36 @@
 #map {
   width: 100%;
   height: 80vh;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #c7a27a; /* warm brown */
+  font-family: "Press Start 2P", cursive;
+  color: #2b1a0f; /* dark brown text */
+}
+
+#statusPanel,
+#controlPanel {
+  padding: 10px 20px;
+  margin: 10px;
+  background: rgba(255, 248, 240, 0.9); /* light cream */
+  border-radius: 10px;
+  border: 2px solid #8b5a2b;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.leaflet-tooltip {
+  background: #fff5e1;
+  color: #4e2c0c;
+  border: 2px solid #8b5a2b;
+  font-family: "Press Start 2P", cursive;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  opacity: 0.95 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }

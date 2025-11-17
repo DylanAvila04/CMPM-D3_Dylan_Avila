@@ -100,6 +100,7 @@ function tileDistanceFromPlayer(i: number, j: number): number {
   return Math.max(Math.abs(i), Math.abs(j));
 }
 
+// handles the players click event
 function handleCellClick(cell: Cell) {
   const distance = tileDistanceFromPlayer(cell.i, cell.j);
 
@@ -164,6 +165,7 @@ function updateCellTooltip(cell: Cell) {
   }
 }
 
+// Creats a grid of cell with specifc token value
 function createCell(i: number, j: number): Cell {
   const rect = leaflet.rectangle(tileBounds(i, j), { weight: 1 });
   rect.addTo(map);
