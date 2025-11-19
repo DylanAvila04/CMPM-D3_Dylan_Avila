@@ -74,11 +74,10 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ## no memory cells
 
--[ ] change the grid-drawing code to draw cells around the current player position instead of always around (0,0)
-
-- [ ] clear old cell rectangles from the map before drawing a new grid
-- [ ] when recreating cells, use the same luck-based rules to assign token values so cells “reset” when they come back into view
-- [ ] test that moving away and back to the same screen region lets me re-collect tokens there
+- [x] change the grid-drawing code to draw cells around the current player position instead of always around (0,0)
+- [x] clear old cell rectangles from the map before drawing a new grid
+- [x] when recreating cells, use the same luck-based rules to assign token values so cells “reset” when they come back into view
+- [x] test that moving away and back to the same screen region lets me re-collect tokens there
 
 ## crafting
 
