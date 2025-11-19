@@ -81,6 +81,6 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 
 ## crafting
 
-- [ ] update the target crafted token value (e.g. from 16 up to 32)
-- [ ] update the victory message and any text that mentions the goal value
-- [ ] test that the game only declares victory once the new higher target value is crafted
+- [x] update the target crafted token value (e.g. from 16 up to 32)
+- [x] update the victory message and any text that mentions the goal value
+- [x] test that the game only declares victory once the new higher target value is crafted

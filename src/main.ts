@@ -67,7 +67,7 @@ function playerLatLng(): leaflet.LatLng {
 
 let heldTokenValue: number | null = null;
 
-const TARGET_TOKEN_VALUE = 16;
+const TARGET_TOKEN_VALUE = 32;
 
 function updateStatus(message?: string) {
   const heldText = heldTokenValue === null
