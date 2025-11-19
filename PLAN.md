@@ -64,3 +64,24 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [x] test edge cases (clicking far cells, empty cells, many crafts in a row) to make sure state
 
 ### D3.b world of bits, Globe spanning gameplay
+
+## player movement
+
+- [x] add UI buttons in the control panel to move north, south, east, and west by one grid cell
+- [x] store the player’s position as grid coordinates like playerI, playerJ instead of a fixed point at the classroom
+- [x] recenter the map and player marker whenever the player moves
+- [x] update the status panel to mention the player’s current grid coordinates
+
+## no memory cells
+
+-[ ] change the grid-drawing code to draw cells around the current player position instead of always around (0,0)
+
+- [ ] clear old cell rectangles from the map before drawing a new grid
+- [ ] when recreating cells, use the same luck-based rules to assign token values so cells “reset” when they come back into view
+- [ ] test that moving away and back to the same screen region lets me re-collect tokens there
+
+## crafting
+
+- [ ] update the target crafted token value (e.g. from 16 up to 32)
+- [ ] update the victory message and any text that mentions the goal value
+- [ ] test that the game only declares victory once the new higher target value is crafted

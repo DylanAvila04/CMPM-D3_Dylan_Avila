@@ -9,6 +9,18 @@ const controlPanelDiv = document.createElement("div");
 controlPanelDiv.id = "controlPanel";
 document.body.append(controlPanelDiv);
 
+function makeMoveButton(label: string, di: number, dj: number) {
+  const btn = document.createElement("button");
+  btn.textContent = label;
+  btn.addEventListener("click", () => movePlayer(di, dj));
+  controlPanelDiv.append(btn);
+}
+
+makeMoveButton("North", 1, 0);
+makeMoveButton("South", -1, 0);
+makeMoveButton("West", 0, -1);
+makeMoveButton("East", 0, 1);
+
 const mapDiv = document.createElement("div");
 mapDiv.id = "map";
 document.body.append(mapDiv);
@@ -16,6 +28,42 @@ document.body.append(mapDiv);
 const statusPanelDiv = document.createElement("div");
 statusPanelDiv.id = "statusPanel";
 document.body.append(statusPanelDiv);
+
+const WORLD_ORIGIN = leaflet.latLng(0, 0);
+
+const TILE_DEGREES = 1e-4;
+const NEIGHBORHOOD_SIZE = 8;
+const INTERACTION_RANGE = 3;
+
+const TOKEN_SPAWN_PROBABILITY = 0.25;
+const MAX_TOKEN_EXPONENT = 3;
+
+// Player grid-space location
+let playerI = 0;
+let playerJ = 0;
+
+function latLngForCell(i: number, j: number): leaflet.LatLng {
+  return leaflet.latLng(
+    WORLD_ORIGIN.lat + i * TILE_DEGREES,
+    WORLD_ORIGIN.lng + j * TILE_DEGREES,
+  );
+}
+
+function movePlayer(di: number, dj: number) {
+  playerI += di;
+  playerJ += dj;
+
+  const center = playerLatLng();
+  map.setView(center);
+  playerMarker.setLatLng(center);
+
+  redrawGridAroundPlayer();
+  updateStatus(`Moved to (${playerI}, ${playerJ})`);
+}
+
+function playerLatLng(): leaflet.LatLng {
+  return latLngForCell(playerI, playerJ);
+}
 
 let heldTokenValue: number | null = null;
 
@@ -35,15 +83,11 @@ function updateStatus(message?: string) {
 }
 
 // Classroom location
-const CLASSROOM_LATLNG = leaflet.latLng(
-  36.997936938057016,
-  -122.05703507501151,
-);
 
 const GAMEPLAY_ZOOM_LEVEL = 19;
 
 const map = leaflet.map(mapDiv, {
-  center: CLASSROOM_LATLNG,
+  center: playerLatLng(),
   zoom: GAMEPLAY_ZOOM_LEVEL,
   minZoom: GAMEPLAY_ZOOM_LEVEL,
   maxZoom: GAMEPLAY_ZOOM_LEVEL,
@@ -59,16 +103,9 @@ leaflet
   })
   .addTo(map);
 
-const playerMarker = leaflet.marker(CLASSROOM_LATLNG);
+const playerMarker = leaflet.marker(playerLatLng());
 playerMarker.bindTooltip("You are here!");
 playerMarker.addTo(map);
-
-const TILE_DEGREES = 1e-4;
-const NEIGHBORHOOD_SIZE = 8;
-const INTERACTION_RANGE = 3;
-
-const TOKEN_SPAWN_PROBABILITY = 0.25;
-const MAX_TOKEN_EXPONENT = 3;
 
 type Cell = {
   i: number;
@@ -86,18 +123,21 @@ function cellKey(i: number, j: number): string {
 function tileBounds(i: number, j: number): leaflet.LatLngBoundsExpression {
   return [
     [
-      CLASSROOM_LATLNG.lat + i * TILE_DEGREES,
-      CLASSROOM_LATLNG.lng + j * TILE_DEGREES,
+      WORLD_ORIGIN.lat + i * TILE_DEGREES,
+      WORLD_ORIGIN.lng + j * TILE_DEGREES,
     ],
     [
-      CLASSROOM_LATLNG.lat + (i + 1) * TILE_DEGREES,
-      CLASSROOM_LATLNG.lng + (j + 1) * TILE_DEGREES,
+      WORLD_ORIGIN.lat + (i + 1) * TILE_DEGREES,
+      WORLD_ORIGIN.lng + (j + 1) * TILE_DEGREES,
     ],
   ];
 }
 
 function tileDistanceFromPlayer(i: number, j: number): number {
-  return Math.max(Math.abs(i), Math.abs(j));
+  return Math.max(
+    Math.abs(i - playerI),
+    Math.abs(j - playerJ),
+  );
 }
 
 // handles the players click event
@@ -165,6 +205,28 @@ function updateCellTooltip(cell: Cell) {
   }
 }
 
+function clearCells() {
+  cells.forEach((cell) => cell.rect.remove());
+  cells.clear();
+}
+
+function redrawGridAroundPlayer() {
+  clearCells();
+  for (
+    let i = playerI - NEIGHBORHOOD_SIZE;
+    i <= playerI + NEIGHBORHOOD_SIZE;
+    i++
+  ) {
+    for (
+      let j = playerJ - NEIGHBORHOOD_SIZE;
+      j <= playerJ + NEIGHBORHOOD_SIZE;
+      j++
+    ) {
+      createCell(i, j);
+    }
+  }
+}
+
 // Creats a grid of cell with specifc token value
 function createCell(i: number, j: number): Cell {
   const rect = leaflet.rectangle(tileBounds(i, j), { weight: 1 });
@@ -190,10 +252,6 @@ function createCell(i: number, j: number): Cell {
   return cell;
 }
 
-for (let i = -NEIGHBORHOOD_SIZE; i <= NEIGHBORHOOD_SIZE; i++) {
-  for (let j = -NEIGHBORHOOD_SIZE; j <= NEIGHBORHOOD_SIZE; j++) {
-    createCell(i, j);
-  }
-}
+redrawGridAroundPlayer();
 
 updateStatus("Click nearby cells to pick up and craft tokens.");
