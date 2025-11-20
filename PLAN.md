@@ -84,3 +84,22 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
 - [x] update the target crafted token value (e.g. from 16 up to 32)
 - [x] update the victory message and any text that mentions the goal value
 - [x] test that the game only declares victory once the new higher target value is crafted
+
+### D3.c The World of Bits, Object Persistence
+
+- [x] Add a map to remember each cell’s value
+- [x] Screen cells are Flyweights: they only store i, j, rect, and value
+- [x] When a cell appears:
+      - [x] use the remembered value if we have one
+      - [x] otherwise make a new value and remember it
+- [x] When I pick up or craft, save the new value
+- [x] Test that leaving and returning keeps the changes
+
+  ## tips from professor for D3.c
+
+  - Try to include the word flyweight
+  - add comment about storage, or words like intrinsic/extrinsic
+  - Try to have the word Memento present
+    Be able to easily identify the objects which states is being saved
+
+### D3.d: World of Bits, Gameplay Across Real-world Space and Time

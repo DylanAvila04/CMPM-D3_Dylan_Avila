@@ -116,6 +116,12 @@ type Cell = {
 
 const cells = new Map<string, Cell>();
 
+type CellMemory = {
+  value: number;
+};
+
+const savedCells = new Map<string, CellMemory>();
+
 function cellKey(i: number, j: number): string {
   return `${i},${j}`;
 }
@@ -157,6 +163,13 @@ function handleCellClick(cell: Cell) {
 
     heldTokenValue = cell.value;
     cell.value = 0;
+
+    const key = cellKey(cell.i, cell.j);
+    const memory = savedCells.get(key);
+    if (memory) {
+      memory.value = 0;
+    }
+
     updateCellTooltip(cell);
     updateStatus("You picked up a token!");
     return;
@@ -179,6 +192,13 @@ function handleCellClick(cell: Cell) {
   const newValue = cell.value * 2;
   heldTokenValue = null;
   cell.value = newValue;
+
+  const key2 = cellKey(cell.i, cell.j);
+  const craftedMemory = savedCells.get(key2);
+  if (craftedMemory) {
+    craftedMemory.value = newValue;
+  }
+
   updateCellTooltip(cell);
 
   let message = `Crafted a token of value ${newValue}!`;
@@ -229,26 +249,38 @@ function redrawGridAroundPlayer() {
 
 // Creats a grid of cell with specifc token value
 function createCell(i: number, j: number): Cell {
+  const key = cellKey(i, j);
+
+  // 1. Try to find a saved memory for this cell.
+  let memory = savedCells.get(key);
+
+  // 2. If we have no memory yet, generate a starting value and remember it.
+  if (!memory) {
+    const spawnRoll = luck([i, j, "spawn"].toString());
+    let value = 0;
+
+    if (spawnRoll < TOKEN_SPAWN_PROBABILITY) {
+      const exponent = 1 +
+        Math.floor(luck([i, j, "value"].toString()) * MAX_TOKEN_EXPONENT);
+      value = 2 ** exponent;
+    }
+
+    memory = { value };
+    savedCells.set(key, memory);
+  }
+
+  // 3. Draw the picture (rectangle) for this cell using the remembered value.
   const rect = leaflet.rectangle(tileBounds(i, j), { weight: 1 });
   rect.addTo(map);
 
-  const spawnRoll = luck([i, j, "spawn"].toString());
-  let value = 0;
-
-  if (spawnRoll < TOKEN_SPAWN_PROBABILITY) {
-    const exponent = 1 +
-      Math.floor(luck([i, j, "value"].toString()) * MAX_TOKEN_EXPONENT);
-    value = 2 ** exponent;
-  }
-
-  const cell: Cell = { i, j, rect, value };
+  const cell: Cell = { i, j, rect, value: memory.value };
   updateCellTooltip(cell);
 
   rect.on("click", () => {
     handleCellClick(cell);
   });
 
-  cells.set(cellKey(i, j), cell);
+  cells.set(key, cell);
   return cell;
 }
 
