@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 import leaflet from "leaflet";
 
 import "leaflet/dist/leaflet.css";
