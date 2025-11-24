@@ -103,3 +103,10 @@ Key gameplay challenge: Can players collect and craft tokens from nearby locatio
     Be able to easily identify the objects which states is being saved
 
 ### D3.d: World of Bits, Gameplay Across Real-world Space and Time
+
+- [x] Add a movement facade that can use buttons or phone gps for the game
+- [x] put geolocation up so it moves the player on the grid
+- [x] save game state that player leaves it in into a local storage and load it up when you open the page again
+- [x] add a NewGame button to clear and reset the game the player currently has
+- [x] fix movement feauture in my game based on TA feedback recieved from D3.
+- [x] update look of game

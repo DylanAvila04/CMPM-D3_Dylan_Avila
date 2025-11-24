@@ -1,33 +1,9 @@
 import leaflet from "leaflet";
 
 import "leaflet/dist/leaflet.css";
-import "./style.css";
 import "./_leafletWorkaround.ts";
 import luck from "./_luck.ts";
-
-const controlPanelDiv = document.createElement("div");
-controlPanelDiv.id = "controlPanel";
-document.body.append(controlPanelDiv);
-
-function makeMoveButton(label: string, di: number, dj: number) {
-  const btn = document.createElement("button");
-  btn.textContent = label;
-  btn.addEventListener("click", () => movePlayer(di, dj));
-  controlPanelDiv.append(btn);
-}
-
-makeMoveButton("North", 1, 0);
-makeMoveButton("South", -1, 0);
-makeMoveButton("West", 0, -1);
-makeMoveButton("East", 0, 1);
-
-const mapDiv = document.createElement("div");
-mapDiv.id = "map";
-document.body.append(mapDiv);
-
-const statusPanelDiv = document.createElement("div");
-statusPanelDiv.id = "statusPanel";
-document.body.append(statusPanelDiv);
+import "./style.css";
 
 const WORLD_ORIGIN = leaflet.latLng(0, 0);
 
@@ -37,75 +13,12 @@ const INTERACTION_RANGE = 3;
 
 const TOKEN_SPAWN_PROBABILITY = 0.25;
 const MAX_TOKEN_EXPONENT = 3;
-
-// Player grid-space location
-let playerI = 0;
-let playerJ = 0;
-
-function latLngForCell(i: number, j: number): leaflet.LatLng {
-  return leaflet.latLng(
-    WORLD_ORIGIN.lat + i * TILE_DEGREES,
-    WORLD_ORIGIN.lng + j * TILE_DEGREES,
-  );
-}
-
-function movePlayer(di: number, dj: number) {
-  playerI += di;
-  playerJ += dj;
-
-  const center = playerLatLng();
-  map.setView(center);
-  playerMarker.setLatLng(center);
-
-  redrawGridAroundPlayer();
-  updateStatus(`Moved to (${playerI}, ${playerJ})`);
-}
-
-function playerLatLng(): leaflet.LatLng {
-  return latLngForCell(playerI, playerJ);
-}
-
-let heldTokenValue: number | null = null;
-
-const TARGET_TOKEN_VALUE = 32;
-
-function updateStatus(message?: string) {
-  const heldText = heldTokenValue === null
-    ? "Not holding a token."
-    : `Holding a token of value ${heldTokenValue}.`;
-
-  let extra = "";
-  if (message) {
-    extra = "<br>" + message;
-  }
-
-  statusPanelDiv.innerHTML = heldText + extra;
-}
-
-// Classroom location
-
 const GAMEPLAY_ZOOM_LEVEL = 19;
 
-const map = leaflet.map(mapDiv, {
-  center: playerLatLng(),
-  zoom: GAMEPLAY_ZOOM_LEVEL,
-  minZoom: GAMEPLAY_ZOOM_LEVEL,
-  maxZoom: GAMEPLAY_ZOOM_LEVEL,
-  zoomControl: false,
-  scrollWheelZoom: false,
-});
+const TARGET_TOKEN_VALUE = 32;
+const SAVE_KEY = "worldOfBitsSave";
 
-leaflet
-  .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution:
-      '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  })
-  .addTo(map);
-
-const playerMarker = leaflet.marker(playerLatLng());
-playerMarker.bindTooltip("You are here!");
-playerMarker.addTo(map);
+type MovementMode = "buttons" | "geolocation";
 
 type Cell = {
   i: number;
@@ -114,16 +27,50 @@ type Cell = {
   value: number;
 };
 
-const cells = new Map<string, Cell>();
-
 type CellMemory = {
   value: number;
 };
 
+type SaveData = {
+  playerI: number;
+  playerJ: number;
+  heldTokenValue: number | null;
+  cellMementos: [string, CellMemory][];
+};
+
+// Player grid-space location
+let playerI = 0;
+let playerJ = 0;
+
+let heldTokenValue: number | null = null;
+
+let currentMovementMode: MovementMode = "buttons";
+let geoWatchId: number | null = null;
+
+const cells = new Map<string, Cell>();
 const savedCells = new Map<string, CellMemory>();
 
-function cellKey(i: number, j: number): string {
-  return `${i},${j}`;
+const controlPanelDiv = document.createElement("div");
+controlPanelDiv.id = "controlPanel";
+document.body.append(controlPanelDiv);
+
+const mapDiv = document.createElement("div");
+mapDiv.id = "map";
+document.body.append(mapDiv);
+
+const statusPanelDiv = document.createElement("div");
+statusPanelDiv.id = "statusPanel";
+document.body.append(statusPanelDiv);
+
+function latLngForCell(i: number, j: number): leaflet.LatLng {
+  return leaflet.latLng(
+    WORLD_ORIGIN.lat + i * TILE_DEGREES,
+    WORLD_ORIGIN.lng + j * TILE_DEGREES,
+  );
+}
+
+function playerLatLng(): leaflet.LatLng {
+  return latLngForCell(playerI, playerJ);
 }
 
 function tileBounds(i: number, j: number): leaflet.LatLngBoundsExpression {
@@ -146,7 +93,216 @@ function tileDistanceFromPlayer(i: number, j: number): number {
   );
 }
 
-// handles the players click event
+function cellKey(i: number, j: number): string {
+  return `${i},${j}`;
+}
+
+function updateStatus(message?: string) {
+  const heldText = heldTokenValue === null
+    ? "Not holding a token."
+    : `Holding a token of value ${heldTokenValue}.`;
+
+  let extra = "";
+  if (message) {
+    extra = "<br>" + message;
+  }
+
+  statusPanelDiv.innerHTML = heldText + extra;
+}
+
+const map = leaflet.map(mapDiv, {
+  center: playerLatLng(),
+  zoom: GAMEPLAY_ZOOM_LEVEL,
+  minZoom: GAMEPLAY_ZOOM_LEVEL,
+  maxZoom: GAMEPLAY_ZOOM_LEVEL,
+  zoomControl: false,
+  scrollWheelZoom: false,
+});
+
+leaflet
+  .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  })
+  .addTo(map);
+
+const playerMarker = leaflet.marker(playerLatLng());
+playerMarker.bindTooltip("You are here!");
+playerMarker.addTo(map);
+
+function movePlayer(di: number, dj: number) {
+  playerI += di;
+  playerJ += dj;
+
+  const center = playerLatLng();
+  map.setView(center);
+  playerMarker.setLatLng(center);
+
+  redrawGridAroundPlayer();
+  updateStatus(`Moved to (${playerI}, ${playerJ})`);
+  saveGame();
+}
+
+function movePlayerToLatLng(lat: number, lng: number) {
+  const i = Math.round((lat - WORLD_ORIGIN.lat) / TILE_DEGREES);
+  const j = Math.round((lng - WORLD_ORIGIN.lng) / TILE_DEGREES);
+
+  playerI = i;
+  playerJ = j;
+
+  const center = playerLatLng();
+  map.setView(center);
+  playerMarker.setLatLng(center);
+  redrawGridAroundPlayer();
+}
+
+const movementFacade = {
+  useButtons() {
+    currentMovementMode = "buttons";
+
+    if (geoWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(geoWatchId);
+      geoWatchId = null;
+    }
+
+    updateStatus("Movement mode: buttons.");
+  },
+
+  useGeolocation() {
+    if (!navigator.geolocation) {
+      updateStatus("Geolocation is not supported, staying in button mode.");
+      return;
+    }
+
+    currentMovementMode = "geolocation";
+    updateStatus("Movement mode: geolocation (move with your device).");
+
+    if (geoWatchId !== null) {
+      navigator.geolocation.clearWatch(geoWatchId);
+    }
+
+    geoWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        movePlayerToLatLng(lat, lng);
+        saveGame();
+      },
+      (err) => {
+        updateStatus("Geolocation error: " + err.message);
+      },
+    );
+  },
+};
+
+function saveGame() {
+  const data: SaveData = {
+    playerI,
+    playerJ,
+    heldTokenValue,
+    cellMementos: Array.from(savedCells.entries()),
+  };
+
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function loadGame() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return;
+
+  try {
+    const data = JSON.parse(raw) as SaveData;
+    playerI = data.playerI;
+    playerJ = data.playerJ;
+    heldTokenValue = data.heldTokenValue;
+
+    savedCells.clear();
+    for (const [key, mem] of data.cellMementos) {
+      savedCells.set(key, mem);
+    }
+
+    const center = playerLatLng();
+    map.setView(center);
+    playerMarker.setLatLng(center);
+    updateStatus("Loaded saved game from localStorage.");
+  } catch {
+    updateStatus("Save data was broken, starting a new game.");
+  }
+}
+
+function makeMoveButton(
+  label: string,
+  di: number,
+  dj: number,
+): HTMLButtonElement {
+  const btn = document.createElement("button");
+  btn.textContent = label;
+  btn.addEventListener("click", () => {
+    movePlayer(di, dj);
+  });
+  return btn;
+}
+
+// New Game button
+const newGameButton = document.createElement("button");
+newGameButton.textContent = "New Game";
+newGameButton.addEventListener("click", () => {
+  localStorage.removeItem(SAVE_KEY);
+
+  playerI = 0;
+  playerJ = 0;
+  heldTokenValue = null;
+  savedCells.clear();
+
+  const center = playerLatLng();
+  map.setView(center);
+  playerMarker.setLatLng(center);
+  redrawGridAroundPlayer();
+  updateStatus("Started a new game.");
+  saveGame();
+});
+controlPanelDiv.append(newGameButton);
+
+// NESW movement layout
+const moveControls = document.createElement("div");
+moveControls.id = "moveControls";
+controlPanelDiv.append(moveControls);
+
+const northButton = makeMoveButton("North", 1, 0);
+const middleRow = document.createElement("div");
+const westButton = makeMoveButton("West", 0, -1);
+const eastButton = makeMoveButton("East", 0, 1);
+const southButton = makeMoveButton("South", -1, 0);
+
+middleRow.append(westButton, eastButton);
+moveControls.append(northButton, middleRow, southButton);
+
+// Mode switch buttons (Facade)
+const modeControls = document.createElement("div");
+modeControls.id = "modeControls";
+controlPanelDiv.append(modeControls);
+
+const buttonModeBtn = document.createElement("button");
+buttonModeBtn.textContent = "Use button movement";
+buttonModeBtn.addEventListener("click", () => {
+  movementFacade.useButtons();
+  saveGame();
+});
+
+const geoModeBtn = document.createElement("button");
+geoModeBtn.textContent = "Use GPS movement";
+geoModeBtn.addEventListener("click", () => {
+  movementFacade.useGeolocation();
+  saveGame();
+});
+
+modeControls.append(buttonModeBtn, geoModeBtn);
+
 function handleCellClick(cell: Cell) {
   const distance = tileDistanceFromPlayer(cell.i, cell.j);
 
@@ -155,8 +311,10 @@ function handleCellClick(cell: Cell) {
     return;
   }
 
+  const key = cellKey(cell.i, cell.j);
+
   if (heldTokenValue == null) {
-    if (cell.value == 0) {
+    if (cell.value === 0) {
       updateStatus("This cell has no token to pick up");
       return;
     }
@@ -164,7 +322,6 @@ function handleCellClick(cell: Cell) {
     heldTokenValue = cell.value;
     cell.value = 0;
 
-    const key = cellKey(cell.i, cell.j);
     const memory = savedCells.get(key);
     if (memory) {
       memory.value = 0;
@@ -172,19 +329,20 @@ function handleCellClick(cell: Cell) {
 
     updateCellTooltip(cell);
     updateStatus("You picked up a token!");
+    saveGame();
     return;
   }
 
-  if (cell.value == 0) {
+  if (cell.value === 0) {
     updateStatus(
-      "You can only craft a new token with a cell that alreaddy has a token",
+      "You can only craft a new token with a cell that already has a token.",
     );
     return;
   }
 
   if (cell.value !== heldTokenValue) {
     updateStatus(
-      "Too craft the token has to be equal value as the token you currently have: ${heldTokenValue}.",
+      `To craft, the cell token must match the one you are holding: ${heldTokenValue}.`,
     );
     return;
   }
@@ -193,8 +351,7 @@ function handleCellClick(cell: Cell) {
   heldTokenValue = null;
   cell.value = newValue;
 
-  const key2 = cellKey(cell.i, cell.j);
-  const craftedMemory = savedCells.get(key2);
+  const craftedMemory = savedCells.get(key);
   if (craftedMemory) {
     craftedMemory.value = newValue;
   }
@@ -207,6 +364,7 @@ function handleCellClick(cell: Cell) {
   }
 
   updateStatus(message);
+  saveGame();
 }
 
 function updateCellTooltip(cell: Cell) {
@@ -230,24 +388,6 @@ function clearCells() {
   cells.clear();
 }
 
-function redrawGridAroundPlayer() {
-  clearCells();
-  for (
-    let i = playerI - NEIGHBORHOOD_SIZE;
-    i <= playerI + NEIGHBORHOOD_SIZE;
-    i++
-  ) {
-    for (
-      let j = playerJ - NEIGHBORHOOD_SIZE;
-      j <= playerJ + NEIGHBORHOOD_SIZE;
-      j++
-    ) {
-      createCell(i, j);
-    }
-  }
-}
-
-// Creats a grid of cell with specifc token value
 function createCell(i: number, j: number): Cell {
   const key = cellKey(i, j);
 
@@ -284,6 +424,27 @@ function createCell(i: number, j: number): Cell {
   return cell;
 }
 
-redrawGridAroundPlayer();
+function redrawGridAroundPlayer() {
+  clearCells();
+  for (
+    let i = playerI - NEIGHBORHOOD_SIZE;
+    i <= playerI + NEIGHBORHOOD_SIZE;
+    i++
+  ) {
+    for (
+      let j = playerJ - NEIGHBORHOOD_SIZE;
+      j <= playerJ + NEIGHBORHOOD_SIZE;
+      j++
+    ) {
+      createCell(i, j);
+    }
+  }
+}
 
-updateStatus("Click nearby cells to pick up and craft tokens.");
+loadGame();
+redrawGridAroundPlayer();
+movementFacade.useButtons();
+
+if (!heldTokenValue) {
+  updateStatus("Not holding a token. Crafted goal: 32.");
+}
